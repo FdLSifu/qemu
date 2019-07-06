@@ -604,6 +604,8 @@ int main(int argc, char **argv, char **envp)
     qemu_init_cpu_list();
     module_call_init(MODULE_INIT_QOM);
 
+    qandy_callbacks_init("/home/fdlsifu/Documents/tools/qandy/qemu/x86_64-linux-user/modules/tracer.so");
+
     envlist = envlist_create();
 
     /* add current environment into the list */

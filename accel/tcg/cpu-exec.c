@@ -35,6 +35,7 @@
 #endif
 #include "sysemu/cpus.h"
 #include "sysemu/replay.h"
+#include "callbacks/callbacks.h"
 
 /* -icount align implementation. */
 
@@ -168,10 +169,16 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
 #endif /* DEBUG_DISAS */
 
     cpu->can_do_io = !use_icount;
+
+    qandy_callbacks_before_block_exec(cpu,itb);
+
     ret = tcg_qemu_tb_exec(env, tb_ptr);
     cpu->can_do_io = 1;
     last_tb = (TranslationBlock *)(ret & ~TB_EXIT_MASK);
     tb_exit = ret & TB_EXIT_MASK;
+
+    qandy_callbacks_after_block_exec(cpu,itb,(uint8_t)tb_exit);
+
     trace_exec_tb_exit(last_tb, tb_exit);
 
     if (tb_exit > TB_EXIT_IDX1) {
@@ -398,7 +405,12 @@ static inline TranslationBlock *tb_find(CPUState *cpu,
     tb = tb_lookup__cpu_state(cpu, &pc, &cs_base, &flags, cf_mask);
     if (tb == NULL) {
         mmap_lock();
+
+        qandy_callbacks_before_block_translate(cpu,pc);
+
         tb = tb_gen_code(cpu, pc, cs_base, flags, cf_mask);
+
+        qandy_callbacks_after_block_translate(cpu,pc);
         mmap_unlock();
         /* We add the TB in the virtual pc hash table for the fast lookup */
         atomic_set(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)], tb);
@@ -669,6 +681,8 @@ int cpu_exec(CPUState *cpu)
 
     cc->cpu_exec_enter(cpu);
 
+    qandy_callbacks_after_cpu_exec_enter(cpu);
+
     /* Calculate difference between guest clock and host clock.
      * This delay includes the delay of the last cycle, so
      * what we have to do is sleep until it is 0. As for the
@@ -725,6 +739,8 @@ int cpu_exec(CPUState *cpu)
             align_clocks(&sc, cpu);
         }
     }
+
+    qandy_callbacks_before_cpu_exec_exit(cpu,1);
 
     cc->cpu_exec_exit(cpu);
     rcu_read_unlock();
