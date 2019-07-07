@@ -37,6 +37,7 @@
 #include "trace/control.h"
 #include "target_elf.h"
 #include "cpu_loop-common.h"
+#include "callbacks/callbacks.h"
 
 char *exec_path;
 
@@ -605,6 +606,7 @@ int main(int argc, char **argv, char **envp)
     module_call_init(MODULE_INIT_QOM);
 
     qandy_callbacks_init("/home/fdlsifu/Documents/tools/qandy/qemu/x86_64-linux-user/modules/tracer.so");
+    qandy_callbacks_module_init();
 
     envlist = envlist_create();
 

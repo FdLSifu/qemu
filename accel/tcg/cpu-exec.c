@@ -410,7 +410,7 @@ static inline TranslationBlock *tb_find(CPUState *cpu,
 
         tb = tb_gen_code(cpu, pc, cs_base, flags, cf_mask);
 
-        qandy_callbacks_after_block_translate(cpu,pc);
+        qandy_callbacks_after_block_translate(cpu,tb);
         mmap_unlock();
         /* We add the TB in the virtual pc hash table for the fast lookup */
         atomic_set(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)], tb);
