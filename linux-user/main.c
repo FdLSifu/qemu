@@ -52,6 +52,12 @@ unsigned long mmap_min_addr;
 unsigned long guest_base;
 int have_guest_base;
 
+/* qandy */
+static const char *qandy_arg;
+static const char *qandy_module;
+int qandymodule = 0;
+int qandyarg = 0;
+
 /*
  * When running 32-on-64 we should make sure we can fit all of the possible
  * guest address space into a contiguous chunk of virtual host memory.
@@ -243,6 +249,25 @@ static void handle_arg_set_env(const char *arg)
     free(r);
 }
 
+
+static void handle_arg_qandy_module(const char *arg)
+{
+    if (access(arg,F_OK) != -1) {
+        qandy_module = arg;
+        qandymodule = 1;
+    }
+    else {
+        printf("[Qandy] module %s doesn't exists\n",arg);
+        usage(EXIT_FAILURE);
+    }
+
+}
+static void handle_arg_qandy_args(const char *arg)
+{
+    qandy_arg = arg;
+    qandyarg = 1;
+}
+
 static void handle_arg_unset_env(const char *arg)
 {
     char *r, *p, *token;
@@ -410,6 +435,10 @@ static const struct qemu_argument arg_table[] = {
      "model",      "select CPU (-cpu help for list)"},
     {"E",          "QEMU_SET_ENV",     true,  handle_arg_set_env,
      "var=value",  "sets targets environment variable (see below)"},
+    {"qandymodule","",                 true,  handle_arg_qandy_module,
+     "path",       "set qandy module to handle callbacks"},
+    {"qandyargs",  "",                 true,  handle_arg_qandy_args,
+     "var=value",  "set qandy module arguments"},
     {"U",          "QEMU_UNSET_ENV",   true,  handle_arg_unset_env,
      "var",        "unsets targets environment variable (see below)"},
     {"0",          "QEMU_ARGV0",       true,  handle_arg_argv0,
@@ -605,8 +634,7 @@ int main(int argc, char **argv, char **envp)
     qemu_init_cpu_list();
     module_call_init(MODULE_INIT_QOM);
 
-    qandy_callbacks_init("/home/fdlsifu/Documents/tools/qandy/qemu/x86_64-linux-user/modules/tracer.so");
-    qandy_callbacks_module_init();
+
 
     envlist = envlist_create();
 
@@ -633,6 +661,16 @@ int main(int argc, char **argv, char **envp)
     qemu_add_opts(&qemu_trace_opts);
 
     optind = parse_args(argc, argv);
+
+    /* qandy module */
+    if (qandymodule)
+    {
+        qandy_callbacks_init(qandy_module);
+        if (qandyarg)
+            qandy_callbacks_module_init(qandy_arg);
+        else
+            qandy_callbacks_module_init(NULL);
+    }
 
     if (!trace_init_backends()) {
         exit(1);
