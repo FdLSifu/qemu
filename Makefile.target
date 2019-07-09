@@ -89,7 +89,7 @@ stap:
 endif
 .PHONY: stap
 
-all: $(PROGS) stap
+all: $(PROGS) stap qandy_modules
 
 # Dummy command so that make thinks it has done something
 	@true
@@ -99,7 +99,6 @@ all: $(PROGS) stap
 obj-y += exec.o
 obj-y += accel/
 obj-y += callbacks/
-obj-y += modules/
 obj-$(CONFIG_TCG) += tcg/tcg.o tcg/tcg-op.o tcg/tcg-op-vec.o tcg/tcg-op-gvec.o
 obj-$(CONFIG_TCG) += tcg/tcg-common.o tcg/optimize.o
 obj-$(CONFIG_TCG_INTERPRETER) += tcg/tci.o
@@ -122,6 +121,9 @@ obj-y += linux-user/
 obj-y += gdbstub.o thunk.o
 
 endif #CONFIG_LINUX_USER
+
+# Makefile qandy modules
+include $(SRC_PATH)/modules/Makefile.include
 
 #########################################################
 # BSD user emulator target
