@@ -165,11 +165,15 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
     }
 
     haddr = addr + env->tlb_table[mmu_idx][index].addend;
+
+    qandy_callbacks_before_mem_read(env, addr, DATA_SIZE, (void*)haddr);
 #if DATA_SIZE == 1
     res = glue(glue(ld, LSUFFIX), _p)((uint8_t *)haddr);
 #else
     res = glue(glue(ld, LSUFFIX), _le_p)((uint8_t *)haddr);
 #endif
+    qandy_callbacks_after_mem_read(env, addr, DATA_SIZE, (uint64_t)res, (void*)haddr);
+
     return res;
 }
 
@@ -232,7 +236,11 @@ WORD_TYPE helper_be_ld_name(CPUArchState *env, target_ulong addr,
     }
 
     haddr = addr + env->tlb_table[mmu_idx][index].addend;
+
+    qandy_callbacks_before_mem_read(env, addr, DATA_SIZE, (void*)haddr);
     res = glue(glue(ld, LSUFFIX), _be_p)((uint8_t *)haddr);
+    qandy_callbacks_after_mem_read(env, addr, DATA_SIZE, (uint64_t)res, (void*)haddr);
+
     return res;
 }
 #endif /* DATA_SIZE > 1 */
@@ -338,11 +346,13 @@ void helper_le_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
     }
 
     haddr = addr + env->tlb_table[mmu_idx][index].addend;
+    qandy_callbacks_before_mem_write(env, addr, DATA_SIZE, val, haddr);
 #if DATA_SIZE == 1
     glue(glue(st, SUFFIX), _p)((uint8_t *)haddr, val);
 #else
     glue(glue(st, SUFFIX), _le_p)((uint8_t *)haddr, val);
 #endif
+    qandy_callbacks_after_mem_write(env, addr, DATA_SIZE, val, haddr);
 }
 
 #if DATA_SIZE > 1
@@ -415,7 +425,10 @@ void helper_be_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
     }
 
     haddr = addr + env->tlb_table[mmu_idx][index].addend;
+
+    qandy_callbacks_before_mem_write(env, addr, DATA_SIZE, val, (void*)haddr);
     glue(glue(st, SUFFIX), _be_p)((uint8_t *)haddr, val);
+    qandy_callbacks_after_mem_write(env, addr, DATA_SIZE, val, (void*)haddr);
 }
 #endif /* DATA_SIZE > 1 */
 #endif /* !defined(SOFTMMU_CODE_ACCESS) */
