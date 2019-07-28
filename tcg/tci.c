@@ -502,9 +502,7 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
 #endif
         TCGMemOpIdx oi;
 
-#if defined(GETPC)
-        tci_tb_ptr = (uintptr_t)tb_ptr;
-#endif
+        uintptr_t tci_tb_ptr = (uintptr_t)tb_ptr;
 
         /* Skip opcode and size entry. */
         tb_ptr += 2;
@@ -584,7 +582,7 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             tci_write_reg8(regs, t0, *(uint8_t *)(t1 + t2));
-            qandy_callbacks_after_mem_read(NULL, t1+t2, sizeof(uint8_t),*(uint8_t *)(t1 + t2), NULL);
+            qandy_callbacks_after_mem_read(tci_tb_ptr, t1+t2, sizeof(uint8_t),*(uint8_t *)(t1 + t2), NULL);
             break;
         case INDEX_op_ld8s_i32:
         case INDEX_op_ld16u_i32:
@@ -598,21 +596,21 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             tci_write_reg32(regs, t0, *(uint32_t *)(t1 + t2));
-            qandy_callbacks_after_mem_read(NULL, t1+t2, sizeof(uint32_t),*(uint32_t *)(t1 + t2), NULL);
+            qandy_callbacks_after_mem_read(tci_tb_ptr, t1+t2, sizeof(uint32_t),*(uint32_t *)(t1 + t2), NULL);
             break;
         case INDEX_op_st8_i32:
             t0 = tci_read_r8(regs, &tb_ptr);
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             *(uint8_t *)(t1 + t2) = t0;
-            qandy_callbacks_after_mem_write(NULL, t1+t2, 1,t0, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, t1+t2, 1,t0, NULL);
             break;
         case INDEX_op_st16_i32:
             t0 = tci_read_r16(regs, &tb_ptr);
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             *(uint16_t *)(t1 + t2) = t0;
-            qandy_callbacks_after_mem_write(NULL, t1+t2, 2,t0, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, t1+t2, 2,t0, NULL);
             break;
         case INDEX_op_st_i32:
             t0 = tci_read_r32(regs, &tb_ptr);
@@ -620,7 +618,7 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
             t2 = tci_read_s32(&tb_ptr);
             tci_assert(t1 != sp_value || (int32_t)t2 < 0);
             *(uint32_t *)(t1 + t2) = t0;
-            qandy_callbacks_after_mem_write(NULL, t1+t2, 4,t0, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, t1+t2, 4,t0, NULL);
             break;
 
             /* Arithmetic operations (32 bit). */
@@ -858,7 +856,7 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             tci_write_reg8(regs, t0, *(uint8_t *)(t1 + t2));
-            qandy_callbacks_after_mem_read(NULL, t1+t1, sizeof(uint8_t),*(uint8_t *)(t1 + t2), NULL);
+            qandy_callbacks_after_mem_read(tci_tb_ptr, t1+t1, sizeof(uint8_t),*(uint8_t *)(t1 + t2), NULL);
 
             break;
         case INDEX_op_ld8s_i64:
@@ -871,42 +869,42 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             tci_write_reg32(regs, t0, *(uint32_t *)(t1 + t2));
-            qandy_callbacks_after_mem_read(NULL, t1+t1, sizeof(uint32_t),*(uint32_t *)(t1 + t2), NULL);
+            qandy_callbacks_after_mem_read(tci_tb_ptr, t1+t1, sizeof(uint32_t),*(uint32_t *)(t1 + t2), NULL);
             break;
         case INDEX_op_ld32s_i64:
             t0 = *tb_ptr++;
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             tci_write_reg32s(regs, t0, *(int32_t *)(t1 + t2));
-            qandy_callbacks_after_mem_read(NULL, t1+t2, sizeof(int32_t),*(int32_t *)(t1 + t2), NULL);
+            qandy_callbacks_after_mem_read(tci_tb_ptr, t1+t2, sizeof(int32_t),*(int32_t *)(t1 + t2), NULL);
             break;
         case INDEX_op_ld_i64:
             t0 = *tb_ptr++;
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             tci_write_reg64(regs, t0, *(uint64_t *)(t1 + t2));
-            qandy_callbacks_after_mem_read(NULL, t1+t2, sizeof(uint64_t),*(uint64_t *)(t1 + t2), NULL);
+            qandy_callbacks_after_mem_read(tci_tb_ptr, t1+t2, sizeof(uint64_t),*(uint64_t *)(t1 + t2), NULL);
             break;
         case INDEX_op_st8_i64:
             t0 = tci_read_r8(regs, &tb_ptr);
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             *(uint8_t *)(t1 + t2) = t0;
-            qandy_callbacks_after_mem_write(NULL, t1+t2, 1,t0, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, t1+t2, 1,t0, NULL);
             break;
         case INDEX_op_st16_i64:
             t0 = tci_read_r16(regs, &tb_ptr);
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             *(uint16_t *)(t1 + t2) = t0;
-            qandy_callbacks_after_mem_write(NULL, t1+t2, 2,t0, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, t1+t2, 2,t0, NULL);
             break;
         case INDEX_op_st32_i64:
             t0 = tci_read_r32(regs, &tb_ptr);
             t1 = tci_read_r(regs, &tb_ptr);
             t2 = tci_read_s32(&tb_ptr);
             *(uint32_t *)(t1 + t2) = t0;
-            qandy_callbacks_after_mem_write(NULL, t1+t2, 4,t0, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, t1+t2, 4,t0, NULL);
             break;
         case INDEX_op_st_i64:
             t0 = tci_read_r64(regs, &tb_ptr);
@@ -914,7 +912,7 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
             t2 = tci_read_s32(&tb_ptr);
             tci_assert(t1 != sp_value || (int32_t)t2 < 0);
             *(uint64_t *)(t1 + t2) = t0;
-            qandy_callbacks_after_mem_write(NULL, t1+t2, 8,t0, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, t1+t2, 8,t0, NULL);
             break;
 
             /* Arithmetic operations (64 bit). */
@@ -1153,7 +1151,7 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
                 tcg_abort();
             }
             tci_write_reg(regs, t0, tmp32);
-            qandy_callbacks_after_mem_read(NULL, taddr, 4,tmp32, NULL);
+            qandy_callbacks_after_mem_read(tci_tb_ptr, taddr, 4,tmp32, NULL);
             break;
         case INDEX_op_qemu_ld_i64:
             t0 = *tb_ptr++;
@@ -1206,12 +1204,12 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
             if (TCG_TARGET_REG_BITS == 32) {
                 tci_write_reg(regs, t1, tmp64 >> 32);
             }
-            qandy_callbacks_after_mem_read(NULL, taddr, 8,tmp64, NULL);
+            qandy_callbacks_after_mem_read(tci_tb_ptr, taddr, 8,tmp64, NULL);
             break;
         case INDEX_op_qemu_st_i32:
             t0 = tci_read_r(regs, &tb_ptr);
             taddr = tci_read_ulong(regs, &tb_ptr);
-            qandy_callbacks_after_mem_write(NULL, taddr, 4,t0, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, taddr, 4,t0, NULL);
             oi = tci_read_i(&tb_ptr);
             switch (get_memop(oi) & (MO_BSWAP | MO_SIZE)) {
             case MO_UB:
@@ -1236,7 +1234,7 @@ uintptr_t tcg_qemu_tb_exec(CPUArchState *env, uint8_t *tb_ptr)
         case INDEX_op_qemu_st_i64:
             tmp64 = tci_read_r64(regs, &tb_ptr);
             taddr = tci_read_ulong(regs, &tb_ptr);
-            qandy_callbacks_after_mem_write(NULL, taddr, 8,tmp64, NULL);
+            qandy_callbacks_after_mem_write(tci_tb_ptr, taddr, 8,tmp64, NULL);
             oi = tci_read_i(&tb_ptr);
             switch (get_memop(oi) & (MO_BSWAP | MO_SIZE)) {
             case MO_UB:
